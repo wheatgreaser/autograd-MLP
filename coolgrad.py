@@ -118,16 +118,28 @@ xs = [[2.0, 3.0, -1.0],
       [0.5, 1.0, 1.0],
       [1.0, 2.0, -0.5]]
 ys = [1.0, -1.0, -1.0, 1.0]
-
-for k in range(20):
+vs = []
+ms = []
+vms = []
+mms = []
+for _ in range(len(n.parameters())):
+    vs.append(0)
+    ms.append(0)
+    vms.append(0)
+    mms.append(0)
+for k in range(50):
     ypred = [n(x) for x in xs]
     loss = sum((yp - ytrue)**2 for yp, ytrue in zip(ypred, ys))
     for p in n.parameters():
         p.grad = 0
     loss.backward()
     
-    for p in n.parameters():
-        p.data += -0.05 * p.grad
+    for i,p in enumerate(n.parameters()):
+        ms[i] = (0.9 * ms[i]) + ((0.1)* p.grad)
+        vs[i] = (0.999 * vs[i]) + ((0.001)* (p.grad ** 2))
+        mms[i] = ms[i] / (1 - 0.9**(k+1))
+        vms[i] = vs[i] / (1 - 0.999**(k+1))
+        p.data += -0.05 * (mms[i] / (math.sqrt(vms[i]) + 1e-8))
     print(k, loss.data)
 
 
